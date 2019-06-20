@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      affinity:
+        podAntiAffinity:  #### burada app=nginx-data-svc olan podla ayni az de acma diyorum-Anti
+          requiredDuringSchedulingIgnoredDuringExecution: 
+          - labelSelector:
+              matchExpressions:
+              - key: app 
+                operator: In 
+                values:
+                - nginx-data-svc
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: failure-domain.beta.kubernetes.io/zone
+                operator: In
+                values:
+                - eu-central-1a
+
+      containers:
+      - name: nginx
+        image: gcr.io/google_containers/nginx-slim:0.8
+        ports:
+        - containerPort: 80
